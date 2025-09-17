@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absurdle - Absurdly Literal!</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 10px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            overflow: hidden;
+        }
+        
+        .game-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            min-height: 80vh;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .clue {
+            font-size: 24px;
+            color: #2c3e50;
+            margin: 10px 0;
+            font-weight: bold;
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        input[type="text"] {
+            font-size: 20px;
+            padding: 12px;
+            width: 100%;
+            max-width: 300px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        
+        button {
+            font-size: 18px;
+            padding: 12px 30px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        
+        button:hover {
+            background: #2980b9;
+        }
+        
+        .feedback {
+            font-size: 20px;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 0px;
+        }
+        
+        .correct {
+            background: #d5edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .progress {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        /* Literal Meter Styles */
+        .literal-meter {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #ecf0f1;
+        }
+
+        .meter-title {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .emoji-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+
+        .slider-container {
+            position: relative;
+            margin: 15px 0;
+        }
+
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .slider:hover {
+            opacity: 1;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .text-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        .score-label {
+            font-size: 14px;
+            color: #666;
+            margin: 15px 0 5px;
+        }
+
+        .score-display {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .submit-rating-btn {
+            background: #27ae60;
+            font-size: 16px;
+            padding: 10px 25px;
+        }
+
+        .submit-rating-btn:hover {
+            background: #229954;
+        }
+
+        .rating-complete {
+            background: #d5edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        /* Missed Clues Section */
+        .missed-clues-section {
+            margin: 20px 0;
+            padding: 20px 0;
+        }
+
+        .missed-clues-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 250px;
+            margin: 0 auto;
+        }
+
+        .try-missed-btn {
+            background: #3498db;
+            font-size: 16px;
+            padding: 12px 20px;
+            display: none;
+        }
+
+        .try-missed-btn:hover {
+            background: #2980b9;
+        }
+
+        .reveal-answers-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 12px 20px;
+        }
+
+        .reveal-answers-btn:hover {
+            background: #229954;
+        }
+
+        .missed-answers {
+            margin-top: 20px;
+            text-align: left;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .missed-answer-item {
+            background: #f8f9fa;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 6px;
+            border-left: 4px solid #3498db;
+        }
+
+        .missed-clue {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .missed-answer {
+            color: #27ae60;
+            font-style: italic;
+            
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Absurdle!</h1>
+        
+        <div class="clue" id="clue">Loading...</div>
+        
+        <input type="text" id="guessInput" placeholder="Enter your guess..." autocomplete="off">
+        <br>
+        <button onclick="submitGuess()">Submit</button>
+        
+        <div id="feedback" class="feedback" style="display: none;"></div>
+
+        <!-- Missed Clues Section (hidden initially) -->
+        <div class="missed-clues-section" id="missedCluesSection" style="display: none;">
+            <div class="missed-clues-buttons">
+                <button class="try-missed-btn" onclick="tryMissedClues()">Try Missed Clues</button>
+                <button class="reveal-answers-btn" onclick="revealAnswers()">Reveal Missed Answers</button>
+            </div>
+            <div id="missedAnswers" class="missed-answers" style="display: none;"></div>
+        </div>
+
+        <!-- Literal Meter (hidden initially) -->
+        <div class="literal-meter" id="literalMeter" style="display: none;">
+            <div class="meter-title">Rate today's literal-ness:</div>
+            
+            <div class="emoji-labels">
+                <span>😐</span>
+                <span>😵‍💫</span>
+            </div>
+            
+            <div class="slider-container">
+                <input type="range" min="10" max="100" value="55" class="slider" id="literalSlider">
+            </div>
+            
+            <div class="text-labels">
+                <span>Not Literal</span>
+                <span>Absurdly Literal</span>
+            </div>
+            
+            <div class="score-label">Your Rating:</div>
+            <div class="score-display" id="scoreDisplay">5.5/10</div>
+            
+            <button class="submit-rating-btn" onclick="submitRating()">Submit Rating</button>
+            
+            <div id="ratingFeedback" class="rating-complete" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // All available puzzles
+        const allPuzzles = [
+            // { clue: "Dental bristle scrubbing wand", answer: "toothbrush" },
+            // { clue: "Portable rain deflection shield", answer: "umbrella" },
+            // { clue: "Foot fabric tubes", answer: "socks" },
+            // { clue: "Triangular cheese delivery vehicle", answer: "pizza" },
+            // { clue: "Fluffy head insulation sphere", answer: "pillow" },
+            // { clue: "Reflective wall-mounted face checker", answer: "mirror" },
+            // { clue: "Frozen dairy pleasure cylinder", answer: "ice cream" },
+            // { clue: "Portable rectangular brain computer", answer: "phone" },
+            // { clue: "Cylindrical graphite marking stick", answer: "pencil" },
+            // { clue: "Heated grain water beverage", answer: "coffee" },
+            { clue: "Human parking structure", answer: "chair" },
+            { clue: "Transparent vision enhancers", answer: "glasses" },
+            { clue: "Wheeled clothing transport device", answer: "suitcase" },
+            { clue: "Digital time display rectangle", answer: "clock" },
+            { clue: "Handheld food cutting blade", answer: "knife" },
+            { clue: "Nighttime unconsciousness rectangle", answer: "bed" },
+            { clue: "Fragile protein capsule", answer: "egg" },
+            { clue: "Liquid delivery chalice", answer: "cup" },
+            { clue: "Illumination producing stick", answer: "candle" },
+            { clue: "Satisfying air vibrations", answer: "music" },
+            { clue: "Moisture expulsion square", answer: "napkin" },
+            { clue: "Ear canal sound funnels", answer: "headphones" },
+            { clue: "Cold food box", answer: "fridge" },
+            { clue: "Mechanical paper biting jaws", answer: "stapler" },
+            { clue: "Hand sweater", answer: "glove" },
+            { clue: "Spinny air mover", answer: "fan" },
+            { clue: "Quadruped doorbell alarm", answer: "dog" },
+            { clue: "Thumbed page information slab", answer: "book" },
+            { clue: "Aluminium carbonated sugar can", answer: "soda" },
+            { clue: "Mouth freshening cube", answer: "gum" },
+            { clue: "Wax drawing log", answer: "crayon" },
+            { clue: "Wheeled metal cage", answer: "car" },
+            { clue: "Blinding life furnace", answer: "sun" },
+            { clue: "Exploding fire dot", answer: "star" },
+            { clue: "Domesticated purring fur loaf", answer: "cat" },
+            { clue: "Digit protection hard hat", answer: "nail" },
+            { clue: "Denim leg tubes", answer: "jeans" },
+            { clue: "Moisture removal fabric flap", answer: "towel" },
+            { clue: "Food heating box", answer: "microwave" },
+            { clue: "Viscous sugary tree drizzle", answer: "syrup" },
+            { clue: "Soft peelable potassium arc", answer: "banana" },
+            { clue: "Leather foot armor", answer: "shoes" },
+            { clue: "Edible grain circle", answer: "tortilla" },
+            { clue: "Concave food shovel", answer: "spoon" },
+            { clue: "Earth rotation measuring stick", answer: "calendar" },
+            { clue: "Suspended moisture fluff", answer: "cloud" },
+            { clue: "Sad eye moisture", answer: "tear" },
+            { clue: "Feathered alarm clock", answer: "rooster" },
+            { clue: "Miniature human larvae", answer: "baby" },
+            { clue: "Face chimney", answer: "nose" },
+            { clue: "Knowledge storage maze", answer: "library" },
+            { clue: "Buoyant transportation tub", answer: "boat" },
+            { clue: "Transparent wall hole", answer: "window" },
+            { clue: "Swimming water meat", answer: "fish" },
+            { clue: "Hot wind blaster", answer: "hairdryer" },
+            { clue: "Elastic vegetable explosion kernels", answer: "popcorn" },
+            { clue: "Frozen precipitation battle ammunition", answer: "snowball" },
+            { clue: "Tooth mechanic", answer: "dentist" },
+            { clue: "Floating air prison", answer: "balloon" },
+            { clue: "Fermented mood enhancer", answer: "wine" },
+            { clue: "Scene-freezing memory box", answer: "camera" },
+            { clue: "Handheld paper destruction device", answer: "scissors" },
+            { clue: "Edible cow lactation brick", answer: "cheese" },
+            { clue: "Vertical tree barrier", answer: "fence" },
+            { clue: "Darkness-piercing glow post", answer: "lamp" },
+            { clue: "Wheeled infant transportation device", answer: "stroller" },
+            { clue: "Mouth flavor explosion powder", answer: "salt" },
+            { clue: "Rectangular sleep dimension portal", answer: "bed" },
+            { clue: "Miniature garden rebellion weeds", answer: "grass" },
+            { clue: "Liquid happiness warming vessel", answer: "teapot" },
+            { clue: "Edible tear jerkers", answer: "onions" },
+            { clue: "Portable seconds counter", answer: "watch" },
+            { clue: "Wrist ornament", answer: "bracelet" },
+            { clue: "Sliceable wheat foam", answer: "bread" },
+            { clue: "Portable shelter dome", answer: "tent" },
+            { clue: "Frozen water chunk", answer: "ice" },
+            { clue: "Pocket combustion stick", answer: "lighter" },
+            { clue: "Elastic waist textile holder", answer: "belt" },
+            { clue: "Stacked human elevation slabs", answer: "stairs" },
+            { clue: "Sticky golden bee nectar", answer: "honey" },
+            { clue: "Mechanical alphabet buttons", answer: "keyboard" },
+            { clue: "Rubber velocity loop", answer: "tire" },
+            { clue: "Liquid cleaning bubbles", answer: "soap" },
+            { clue: "Handheld paper binding mechanism", answer: "paperclip" }
+
+            
+        ];
+
+        // Get today's date and create a seed
+        function getTodaysSeed() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const dateString = `${year}-${month}-${day}`;
+            return dateString;
+        }
+
+    
+
+        // Get today's 5 puzzles
+        function getTodaysPuzzles() {
+            const seed = getTodaysSeed();
+            let seedNum = 0;
+            for (let i = 0; i < seed.length; i++) {
+            seedNum += seed.charCodeAt(i);
+        }
+    
+    const shuffled = [...allPuzzles];
+    
+    // Fixed shuffle using proper seeded random
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        seedNum = (seedNum * 1103515245 + 12345) & 0x7fffffff; // Keep it positive
+        const j = seedNum % (i + 1);
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    
+    const result = shuffled.slice(0, 5);
+    console.log("Today's puzzles:", result.map(p => p.clue));
+    return result;
+}
+
+        const puzzles = getTodaysPuzzles();
+
+        let currentPuzzle = 0;
+        let correctCount = 0;
+        let missedPuzzles = []; // Track which puzzles were missed
+        let gameComplete = false;
+
+        function loadPuzzle() {
+            if (currentPuzzle >= puzzles.length) {
+                showGameComplete();
+                return;
+            }
+
+            document.getElementById('clue').textContent = puzzles[currentPuzzle].clue;
+            // document.getElementById('current').textContent = currentPuzzle + 1;
+            // document.getElementById('total').textContent = puzzles.length;
+            document.getElementById('guessInput').value = '';
+            document.getElementById('feedback').style.display = 'none';
+            setTimeout(() => {
+            document.getElementById('guessInput').focus();
+}, 0);
+
+        }
+
+        function submitGuess() {
+            const guess = document.getElementById('guessInput').value.trim().toLowerCase();
+            const correct = puzzles[currentPuzzle].answer.toLowerCase();
+            
+            const feedback = document.getElementById('feedback');
+            
+            if (guess === correct) {
+                feedback.textContent = `Correct!`;
+                feedback.className = 'feedback correct';
+                feedback.style.display = 'block';
+                document.getElementById('guessInput').focus();
+                correctCount++;
+                
+                setTimeout(() => {
+                    document.getElementById('guessInput').value = '';
+                    nextPuzzle();
+                }, 1000);
+            } else if (guess === '') {
+                feedback.textContent = 'Please enter a guess!';
+                feedback.className = 'feedback incorrect';
+                feedback.style.display = 'block';
+            } else {
+                // Wrong answer - just move on without revealing answer
+                feedback.textContent = `Incorrect!`;
+                feedback.className = 'feedback incorrect';
+                feedback.style.display = 'block';
+                document.getElementById('guessInput').focus();
+
+                setTimeout(() => {
+                    document.getElementById('guessInput').value = '';
+                    nextPuzzle();
+                }, 1000);
+
+                // Add to missed puzzles
+                if (!gameComplete) {
+                    missedPuzzles.push({
+                        index: currentPuzzle,
+                        clue: puzzles[currentPuzzle].clue,
+                        answer: puzzles[currentPuzzle].answer
+                    });
+                }
+                
+            }
+        }
+
+        function nextPuzzle() {
+            currentPuzzle++;
+            loadPuzzle();
+        }
+
+        function showGameComplete() {
+            gameComplete = true;
+            
+            // Hide game inputs
+            document.getElementById('guessInput').style.display = 'none';
+            document.querySelector('button[onclick="submitGuess()"]').style.display = 'none';
+            
+            // Show score
+            const feedback = document.getElementById('feedback');
+            if (correctCount === puzzles.length) {
+                document.getElementById('clue').textContent = "Perfect! 🎉";
+                feedback.textContent = `You got ${correctCount} out of ${puzzles.length} correct!`;
+                feedback.className = 'feedback correct';
+                feedback.style.display = 'block';
+            } else {
+                document.getElementById('clue').textContent = `${correctCount} out of ${puzzles.length} correct!`;
+                feedback.style.display = 'none';
+            }
+
+            // Show missed clues options if any were missed
+            if (correctCount < puzzles.length) {
+                document.getElementById('missedCluesSection').style.display = 'block';
+            }
+
+            // Show the literal meter
+            // document.getElementById('literalMeter').style.display = 'block';
+        }
+
+        // Missed Clues Functions
+        function tryMissedClues() {
+            // Hide the buttons and show practice mode
+            document.getElementById('missedCluesSection').style.display = 'none';
+            document.getElementById('literalMeter').style.display = 'none';
+            
+            // Reset for practice mode
+            currentPuzzle = 0;
+            const practiceMode = missedPuzzles.slice(); // Copy missed puzzles
+            
+            // Start practice session
+            startPracticeMode(practiceMode);
+        }
+
+        function startPracticeMode(practiceClues) {
+            if (practiceClues.length === 0) {
+                // Done with practice, show completion
+                document.getElementById('clue').textContent = "Practice complete!";
+                document.getElementById('guessInput').style.display = 'none';
+                document.querySelector('button[onclick="submitGuess()"]').style.display = 'none';
+                
+                const feedback = document.getElementById('feedback');
+                feedback.textContent = "Great job practicing! 🎯";
+                feedback.className = 'feedback correct';
+                feedback.style.display = 'block';
+                
+                // Show rating scale
+                document.getElementById('literalMeter').style.display = 'block';
+                return;
+            }
+            
+            // Show current practice clue
+            const currentClue = practiceClues[0];
+            document.getElementById('clue').textContent = currentClue.clue;
+            document.getElementById('guessInput').value = '';
+            document.getElementById('guessInput').style.display = 'block';
+            document.querySelector('button[onclick="submitGuess()"]').style.display = 'inline-block';
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('guessInput').focus();
+            
+            // Override functions for practice mode
+            window.currentPracticeClues = practiceClues;
+            
+            window.submitGuess = function() {
+                const guess = document.getElementById('guessInput').value.trim().toLowerCase();
+                const correct = practiceClues[0].answer.toLowerCase();
+                const feedback = document.getElementById('feedback');
+                
+                if (guess === correct) {
+                    feedback.textContent = `Correct! It was "${practiceClues[0].answer}"`;
+                    feedback.className = 'feedback correct';
+                    feedback.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        practiceClues.shift(); // Remove completed clue
+                        startPracticeMode(practiceClues);
+                    }, 2000);
+                } else if (guess === '') {
+                    feedback.textContent = 'Please enter a guess!';
+                    feedback.className = 'feedback incorrect';
+                    feedback.style.display = 'block';
+                } else {
+                    feedback.textContent = `Not quite! The answer was "${practiceClues[0].answer}"`;
+                    feedback.className = 'feedback incorrect';
+                    feedback.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        practiceClues.shift(); // Remove clue
+                        startPracticeMode(practiceClues);
+                    }, 2000);
+                }
+            };
+        }
+
+        function revealAnswers() {
+            const answersDiv = document.getElementById('missedAnswers');
+            let answersHTML = '';
+            
+            missedPuzzles.forEach(puzzle => {
+                answersHTML += `
+                    <div class="missed-answer-item">
+                        <div class="missed-clue">${puzzle.clue}</div>
+                        <div class="missed-answer">Answer: ${puzzle.answer}</div>
+                    </div>
+                `;
+            });
+            
+            answersDiv.innerHTML = answersHTML;
+            answersDiv.style.display = 'block';
+            
+            // Hide the buttons
+            document.querySelector('.missed-clues-buttons').style.display = 'none';
+        }
+
+        // Literal Meter Functions
+        const slider = document.getElementById('literalSlider');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        
+        function updateScore() {
+            const rawValue = slider.value / 10;
+            const value = rawValue % 1 === 0 ? rawValue.toString() : rawValue.toFixed(1);
+            scoreDisplay.textContent = `${value}/10`;
+        }
+        
+        slider.addEventListener('input', updateScore);
+        slider.addEventListener('change', updateScore);
+        
+        function submitRating() {
+            const rawValue = slider.value / 10;
+            const rating = rawValue % 1 === 0 ? rawValue.toString() : rawValue.toFixed(1);
+            
+            // Hide the slider and submit button
+            document.querySelector('.submit-rating-btn').style.display = 'none';
+            
+            // Show thank you message
+            const ratingFeedback = document.getElementById('ratingFeedback');
+            ratingFeedback.textContent = `Thanks! You rated today's clues: ${rating}/10`;
+            ratingFeedback.style.display = 'block';
+        }
+
+        // Enter key support
+        document.getElementById('guessInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitGuess();
+            }
+        });
+
+        // Initialize literal meter
+        updateScore();
+
+        // Start the game
+        loadPuzzle();
+    </script>
+</body>
+</html>
