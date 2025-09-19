@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1DXPWRZJ9M"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-1DXPWRZJ9M');
+    </script>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absurdle V2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 10px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .game-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            min-height: 80vh;
+        }
+        
+        .game-complete {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 60vh;
+        }
+        
+        .game-complete.active {
+            display: flex;
+        }
+        
+        .game-complete h1 {
+            font-size: 48px;
+            color: #27ae60;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .game-complete p {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 40px;
+        }
+        
+        .game-content {
+            display: block;
+        }
+        
+        .game-content.hidden {
+            display: none;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .clue-header {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .answer {
+            font-size: 24px;
+            color: #2c3e50;
+            margin: 10px 0 30px;
+            font-weight: bold;
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .empty-spaces-container {
+            margin: 20px 0;
+        }
+        
+        .empty-spaces-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .empty-space {
+            min-width: 100px;
+            height: 40px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #666;
+            background: #f8f9fa;
+            cursor: pointer;
+        }
+        
+        .empty-space.filled {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            color: #1976d2;
+            font-weight: bold;
+        }
+        
+        button {
+            font-size: 18px;
+            padding: 12px 30px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 20px 10px;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background: #2980b9;
+        }
+        
+        button.try-again {
+            background: #e74c3c;
+        }
+        
+        button.correct {
+            background: #27ae60;
+            color: white !important;
+        }
+        
+        .word-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            max-width: 300px;
+            margin: 30px auto;
+        }
+        
+        .word-button {
+            padding: 15px 10px;
+            font-size: 16px;
+            background: #ecf0f1;
+            color: #2c3e50;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .word-button:hover {
+            background: #d5dbdb;
+            border-color: #95a5a6;
+        }
+        
+        .word-button.selected {
+            background: #3498db;
+            color: white;
+            border-color: #2980b9;
+        }
+        
+        .word-button.used {
+            background: #95a5a6;
+            color: #7f8c8d;
+            border-color: #95a5a6;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .feedback {
+            font-size: 20px;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .correct {
+            background: #d5edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Game completion screen -->
+        <div id="game-complete" class="game-complete">
+            <h1>Congrats!</h1>
+            <p>You've completed all the puzzles! Play again tomorrow.</p>
+        </div>
+
+        <!-- Main game content -->
+        <div id="game-content" class="game-content">
+            <div class="answer" id="answer">chair</div>
+            
+            <div class="empty-spaces-container" id="empty-spaces-container">
+                <div class="empty-spaces-row">
+                    <div class="empty-space" onclick="removeWord(0)"></div>
+                    <div class="empty-space" onclick="removeWord(1)"></div>
+                    <div class="empty-space" onclick="removeWord(2)"></div>
+                </div>
+            </div>
+            
+            <button id="submit-btn" onclick="submitGuess()">Submit</button>
+
+            <div id="feedback" class="feedback">
+                <!-- Feedback will appear here -->
+            </div>
+            
+            <div class="word-grid" id="word-grid">
+                <div class="word-button" onclick="selectWord(this, 'human')">human</div>
+                <div class="word-button" onclick="selectWord(this, 'parking')">parking</div>
+                <div class="word-button" onclick="selectWord(this, 'soft')">soft</div>
+                <div class="word-button" onclick="selectWord(this, 'wooden')">wooden</div>
+                <div class="word-button" onclick="selectWord(this, 'furniture')">furniture</div>
+                <div class="word-button" onclick="selectWord(this, 'comfortable')">comfortable</div>
+                <div class="word-button" onclick="selectWord(this, 'structure')">structure</div>
+                <div class="word-button" onclick="selectWord(this, 'sits')">sits</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedWords = [];
+        let currentClue = 1;
+        let maxWords = 3;
+        
+        const clues = {
+            1: {
+                answer: 'chair',
+                correctAnswer: ['human', 'parking', 'structure'],
+                words: ['human', 'parking', 'soft', 'wooden', 'furniture', 'comfortable', 'structure', 'sits'],
+                spaces: 3
+            },
+            2: {
+                answer: 'stapler',
+                correctAnswer: ['mechanical', 'paper', 'biting', 'jaws'],
+                words: ['paper', 'binding', 'mechanical', 'office', 'metal', 'jaws', 'clips', 'biting'],
+                spaces: 4
+            },
+            3: {
+                answer: 'fireplace',
+                correctAnswer: ['household', 'combustion', 'containment', 'unit'],
+                words: ['heat', 'decorative', 'household', 'shell', 'combustion', 'containment', 'device', 'unit'],
+                spaces: 4
+            },
+            4: {
+                answer: 'road',
+                correctAnswer: ['vehicle', 'strip', 'enabling', 'flow'],
+                words: ['enabling', 'vehicle', 'concrete', 'strip', 'flow', 'endless', 'guide', 'hard'],
+                spaces: 4
+            },
+            5: {
+                answer: 'trampoline',
+                correctAnswer: ['bouncy', 'human', 'jump', 'pad'],
+                words: ['human', 'launch', 'pad', 'across', 'jump', 'gravity', 'bouncy', 'fabric'],
+                spaces: 4
+            }
+        };
+        
+        function selectWord(button, word) {
+            // Don't allow interaction with used words
+            if (button.classList.contains('used')) {
+                return;
+            }
+            
+            // If already selected, deselect it
+            if (button.classList.contains('selected')) {
+                button.classList.remove('selected');
+                removeWordFromSelection(word);
+                return;
+            }
+            
+            // If we've reached max words, don't allow more selections
+            if (selectedWords.length >= maxWords) {
+                return;
+            }
+            
+            // Select the word
+            button.classList.add('selected');
+            selectedWords.push(word);
+            updateEmptySpaces();
+        }
+        
+        function removeWord(index) {
+            if (index < selectedWords.length) {
+                const word = selectedWords[index];
+                selectedWords.splice(index, 1);
+                
+                // Find the button and deselect it
+                const buttons = document.querySelectorAll('.word-button');
+                buttons.forEach(button => {
+                    if (button.textContent === word && button.classList.contains('selected')) {
+                        button.classList.remove('selected');
+                    }
+                });
+                
+                updateEmptySpaces();
+            }
+        }
+        
+        function removeWordFromSelection(word) {
+            const index = selectedWords.indexOf(word);
+            if (index > -1) {
+                selectedWords.splice(index, 1);
+                updateEmptySpaces();
+            }
+        }
+        
+        function updateEmptySpaces() {
+            const spaces = document.querySelectorAll('.empty-space');
+            spaces.forEach((space, index) => {
+                if (index < selectedWords.length) {
+                    space.textContent = selectedWords[index];
+                    space.classList.add('filled');
+                } else {
+                    space.textContent = '';
+                    space.classList.remove('filled');
+                }
+            });
+        }
+        
+        function submitGuess() {
+            const submitBtn = document.getElementById('submit-btn');
+            const correctAnswer = clues[currentClue].correctAnswer;
+            
+            console.log('Current clue:', currentClue); // Debug log
+            console.log('Selected words:', selectedWords); // Debug log
+            console.log('Correct answer:', correctAnswer); // Debug log
+            
+            if (selectedWords.length === 0) {
+                // Show try again feedback for no selection
+                submitBtn.textContent = 'Select words!';
+                submitBtn.classList.add('try-again');
+                
+                setTimeout(() => {
+                    submitBtn.textContent = 'Submit';
+                    submitBtn.classList.remove('try-again');
+                }, 2000);
+                return;
+            }
+            
+            // Check if the combination matches
+            const isCorrect = JSON.stringify(selectedWords) === JSON.stringify(correctAnswer);
+            console.log('Is correct:', isCorrect); // Debug log
+            
+            if (isCorrect) {
+                // Show correct feedback
+                submitBtn.textContent = 'Correct!';
+                submitBtn.classList.add('correct');
+                
+                setTimeout(() => {
+                    console.log('Current clue after correct answer:', currentClue); // Debug log
+                    if (currentClue < 5) {
+                        console.log('Moving to next clue'); // Debug log
+                        // Move to next clue
+                        currentClue++;
+                        loadClue(currentClue);
+                    } else {
+                        console.log('Game should be complete, showing completion screen'); // Debug log
+                        // Game completed - show completion screen
+                        showGameComplete();
+                    }
+                }, 1000);
+            } else {
+                // Show try again feedback
+                submitBtn.textContent = 'Try Again!';
+                submitBtn.classList.add('try-again');
+                
+                setTimeout(() => {
+                    submitBtn.textContent = 'Submit';
+                    submitBtn.classList.remove('try-again');
+                }, 2000);
+            }
+        }
+        
+        function loadClue(clueNumber) {
+            const clue = clues[clueNumber];
+            
+            console.log('Loading clue:', clueNumber); // Debug log
+            
+            // Update answer
+            document.getElementById('answer').textContent = clue.answer;
+            
+            // Reset selected words
+            selectedWords = [];
+            maxWords = clue.spaces;
+            
+            // Update empty spaces
+            const container = document.getElementById('empty-spaces-container');
+            container.innerHTML = `
+                <div class="empty-spaces-row">
+                    ${Array(clue.spaces).fill(0).map((_, i) => 
+                        `<div class="empty-space" onclick="removeWord(${i})"></div>`
+                    ).join('')}
+                </div>
+            `;
+            
+            // Update word grid
+            const wordGrid = document.getElementById('word-grid');
+            wordGrid.innerHTML = clue.words.map(word => 
+                `<div class="word-button" onclick="selectWord(this, '${word}')">${word}</div>`
+            ).join('');
+            
+            // Reset submit button
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.textContent = 'Submit';
+            submitBtn.classList.remove('correct', 'try-again');
+            
+            updateEmptySpaces();
+        }
+        
+        function showGameComplete() {
+            console.log('showGameComplete function called'); // Debug log
+            
+            // Hide the main game content
+            const gameContent = document.getElementById('game-content');
+            const gameComplete = document.getElementById('game-complete');
+            
+            console.log('Game content element:', gameContent); // Debug log
+            console.log('Game complete element:', gameComplete); // Debug log
+            
+            if (gameContent) {
+                gameContent.style.display = 'none';
+                console.log('Game content hidden'); // Debug log
+            }
+            if (gameComplete) {
+                gameComplete.style.display = 'flex';
+                console.log('Game complete shown'); // Debug log
+            }
+        }
+        
+        // Initialize the display
+        updateEmptySpaces();
+    </script>
+</body>
+</html>
